@@ -108,3 +108,30 @@ git push
 ```
 
 Keep `composer.lock` and `package-lock.json` committed so other developers install the same dependency versions.
+
+## XAMPP and phpMyAdmin database
+
+This project is configured to use the XAMPP MariaDB database named `computer_cafe`.
+
+1. Open the **XAMPP Control Panel**.
+2. Start **Apache** and **MySQL**.
+3. Open [phpMyAdmin](http://localhost/phpmyadmin).
+4. Select the `computer_cafe` database to view the `stations`, `users`, `sessions`, and other Laravel tables.
+
+The local `.env` uses the default XAMPP connection:
+
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=computer_cafe
+DB_USERNAME=root
+DB_PASSWORD=
+```
+
+If your MySQL root account has a password, update `DB_PASSWORD` in `.env`, then run:
+
+```powershell
+php artisan config:clear
+php artisan migrate
+```
