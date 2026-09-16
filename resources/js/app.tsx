@@ -1,29 +1,44 @@
 import '../css/app.css';
 
-import { createInertiaApp } from '@inertiajs/react';
-import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
+import { useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { route as routeFn } from 'ziggy-js';
-import { initializeTheme } from './hooks/use-appearance';
+import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router-dom';
+import { CafeShell } from './components/cafe-shell';
+import AddStationPage from './pages/cafe/add-station';
+import LoginPage from './pages/cafe/login';
+import StationDetailsPage from './pages/cafe/station-details';
+import StationListPage from './pages/cafe/station-list';
 
-declare global {
-    const route: typeof routeFn;
+function ProtectedRoutes({ isAuthenticated }: { isAuthenticated: boolean }) {
+    if (!isAuthenticated) return <Navigate to="/login" replace />;
+    return <Outlet />;
 }
 
-const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
+function App() {
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-createInertiaApp({
-    title: (title) => `${title} - ${appName}`,
-    resolve: (name) => resolvePageComponent(`./pages/${name}.tsx`, import.meta.glob('./pages/**/*.tsx')),
-    setup({ el, App, props }) {
-        const root = createRoot(el);
+    function login(username: string, password: string) {
+        const valid = username === 'cafe_admin' && password === 'pccafe2026';
+        if (valid) setIsAuthenticated(true);
+        return valid;
+    }
 
-        root.render(<App {...props} />);
-    },
-    progress: {
-        color: '#4B5563',
-    },
-});
+    return (
+        <BrowserRouter>
+            <Routes>
+                <Route path="/login" element={<LoginPage isAuthenticated={isAuthenticated} onLogin={login} />} />
+                <Route element={<ProtectedRoutes isAuthenticated={isAuthenticated} />}>
+                    <Route element={<CafeShell onLogout={() => setIsAuthenticated(false)} />}>
+                        <Route path="/stations" element={<StationListPage />} />
+                        <Route path="/stations/:id" element={<StationDetailsPage />} />
+                        <Route path="/add-station" element={<AddStationPage />} />
+                        <Route path="/" element={<Navigate to="/stations" replace />} />
+                    </Route>
+                </Route>
+                <Route path="*" element={<Navigate to={isAuthenticated ? '/stations' : '/login'} replace />} />
+            </Routes>
+        </BrowserRouter>
+    );
+}
 
-// This will set light / dark mode on load...
-initializeTheme();
+createRoot(document.getElementById('root')!).render(<App />);
